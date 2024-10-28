@@ -15,6 +15,24 @@ public class BinaryTree {
             this.esq = null;
             this.dret = null;
         }
+
+        public void addChild(Person unaPersona, char direction) {
+            if (direction == 'L') {
+                if (this.esq == null) {
+                    this.esq = new NodeA(unaPersona);
+                } else {
+                    throw new IllegalArgumentException("La persona ja existeix a la posició esquerra");
+                }
+            } else if (direction == 'R') {
+                if (this.dret == null) {
+                    this.dret = new NodeA(unaPersona);
+                } else {
+                    throw new IllegalArgumentException("La persona ja existeix a la posició dreta");
+                }
+            } else {
+                throw new IllegalArgumentException("Direcció invàlida, ha de ser 'L' o 'R'");
+            }
+        }
     }
 
     public NodeA arrel;
@@ -76,32 +94,18 @@ public class BinaryTree {
     }
 
     private void addNodeRecursive(NodeA current, Person unaPersona, String level, int index) {
-        // Si estem al final de la cadena level, afegir el node a la posició corresponent
+        // si estem al últim caracter del nivell, afegim el node
         if (index == level.length() - 1) {
-            if (level.charAt(index) == 'L') {
-                if (current.esq == null) {
-                    current.esq = new NodeA(unaPersona);
-                } else {
-                    throw new IllegalArgumentException("The node in the left position already exists");
-                }
-            } else if (level.charAt(index) == 'R') {
-                if (current.dret == null) {
-                    current.dret = new NodeA(unaPersona);
-                } else {
-                    throw new IllegalArgumentException("The node in the right position already exists");
-                }
-            }
+            current.addChild(unaPersona, level.charAt(index));
         } else {
-            // Avancem a l'arbre fins a la posició on s'ha de crear el nou node
+            // Avancem al seguent nivell de l'arbre segons el caracter actual
             if (level.charAt(index) == 'L') {
-                if (current.esq == null) {
-                    current.esq = new NodeA(null); // Crear un node intermedio si no existeix
-                }
+                if (current.esq == null)
+                    current.esq = new NodeA(null); // Crea un node intermig sino existeix
                 addNodeRecursive(current.esq, unaPersona, level, index + 1);
             } else if (level.charAt(index) == 'R') {
-                if (current.dret == null) {
-                    current.dret = new NodeA(null); 
-                }
+                if (current.dret == null)
+                    current.dret = new NodeA(null);
                 addNodeRecursive(current.dret, unaPersona, level, index + 1);
             }
         }
@@ -114,6 +118,11 @@ public class BinaryTree {
          * cridant el mètode recursiu displayTreeRecursive. Comença el recorregut des de
          * l'arrel de l'arbre.
          */
+        if(arrel == null)
+            System.out.println("No hi ha cap alumen a l'arbre.");
+        else{
+            
+        }
     }
 
     public void preorderSave() {
