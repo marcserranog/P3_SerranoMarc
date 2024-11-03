@@ -1,7 +1,9 @@
 package src;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class BinaryTree {
@@ -15,6 +17,108 @@ public class BinaryTree {
             this.esq = null;
             this.dret = null;
         }
+
+        public NodeA(Person inf, NodeA esq, NodeA dret) {
+            this.inf = inf;
+            this.esq = esq;
+            this.dret = dret;
+        }
+
+        public void displaySubtree(int depth) {
+            for (int i = 0; i < depth; i++) {
+                System.out.print("   "); // Mostrar espais per representar la profunditat de l'arbre
+            }
+            System.out.println(inf != null ? inf.getName() : "(null)");
+
+            if (esq != null)
+                esq.displaySubtree(depth + 1);
+            if (dret != null)
+                dret.displaySubtree(depth + 1);
+        }
+
+        public void preorderSaveRecursive(BufferedWriter writer) throws IOException {
+            if (inf != null) {
+                writer.write(inf.toString());
+                writer.newLine();
+            } else {
+                writer.write("null");
+                writer.newLine();
+            }
+
+            if (esq != null) {
+                esq.preorderSaveRecursive(writer);
+            } else {
+                writer.write(";");
+                writer.newLine();
+            }
+
+            if (dret != null) {
+                dret.preorderSaveRecursive(writer);
+            } else {
+                writer.write(";");
+                writer.newLine();
+            }
+        }
+
+        public NodeA findMin() {
+            NodeA current = this;
+            while (current.esq != null) {
+                current = current.esq;
+            }
+            return current;
+        }
+
+        private boolean isDescentFromRecursive(NodeA node, String place) {
+            if (node == null) {
+                return false;
+            }
+            if (node.inf.getPlaceOfOrigin().equalsIgnoreCase(place)) {
+                return true;
+            }
+            return isDescentFromRecursive(node.esq, place) || isDescentFromRecursive(node.dret, place);
+        }
+
+        public boolean addNodeRecursive(Person unaPersona, String level, int index) {
+            if (index == level.length() - 1) {
+                if (level.charAt(index) == 'L') {
+                    if (this.esq == null) {
+                        this.esq = new NodeA(unaPersona);
+                        return true;
+                    } else {
+                        throw new IllegalArgumentException("The node in the left position already exists");
+                    }
+                } else if (level.charAt(index) == 'R') {
+                    if (this.dret == null) {
+                        this.dret = new NodeA(unaPersona);
+                        return true;
+                    } else {
+                        throw new IllegalArgumentException("The node in the right position already exists");
+                    }
+                }
+            } else {
+                if (level.charAt(index) == 'L') {
+                    if (this.esq == null) {
+                        this.esq = new NodeA(null);
+                    }
+                    return this.esq.addNodeRecursive(unaPersona, level, index + 1);
+                } else if (level.charAt(index) == 'R') {
+                    if (this.dret == null) {
+                        this.dret = new NodeA(null);
+                    }
+                    return this.dret.addNodeRecursive(unaPersona, level, index + 1);
+                }
+            }
+            return false;
+        }
+
+        public int countNodesRecursive() {
+            int count = 1;
+            if (esq != null)
+                count += esq.countNodesRecursive();
+            if (dret != null)
+                count += dret.countNodesRecursive();
+            return count;
+        }
     }
 
     public NodeA arrel;
@@ -24,20 +128,11 @@ public class BinaryTree {
     }
 
     public BinaryTree(String filename) {
-
-        /*
-         * Aquest constructor carrega un arbre binari des d'un fitxer. Llegeix el fitxer
-         * on l'arbre es va desar prèviament en format preordre i recrea l'arbre binari
-         * a partir de la informació desada. S’invoca el mètode privat
-         * preorderLoad(BufferedReader bur).
-         */
-
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             this.arrel = preorderLoad(br);
         } catch (IOException e) {
             this.arrel = null;
         }
-
     }
 
     private NodeA preorderLoad(BufferedReader br) throws IOException {
@@ -45,13 +140,10 @@ public class BinaryTree {
         if (line == null || line.equals("null")) {
             return null;
         }
-
         Person person = new Person(line);
         NodeA node = new NodeA(person);
-
         node.esq = preorderLoad(br);
         node.dret = preorderLoad(br);
-
         return node;
     }
 
@@ -59,75 +151,109 @@ public class BinaryTree {
         return this.arrel.inf.getName();
     }
 
-    public void addNode(Person unaPersona, String level) {
-        // Add a node to the binary tree
-        /*
-         * Aquest mètode públic afegeix un nou node a l'arbre, cridant al mètode
-         * recursiu intern addNodeRecursive. El paràmetre level indica la posició del
-         * nou node dins l'arbre, seguint el mateix format de “L” per esquerra i “R” per
-         * dreta. Per exemple, alguns valors vàlids serien: 'L', 'R', 'LL', 'LR', 'RL',
-         * 'RR'.
-         */
-
-        if (arrel == null)
+    public boolean addNode(Person unaPersona, String level) {
+        if (arrel == null) {
             arrel = new NodeA(unaPersona);
-        else
-            addNodeRecursive(arrel, unaPersona, level, 0);
-    }
-
-    private void addNodeRecursive(NodeA current, Person unaPersona, String level, int index) {
-        // Si estem al final de la cadena level, afegir el node a la posició corresponent
-        if (index == level.length() - 1) {
-            if (level.charAt(index) == 'L') {
-                if (current.esq == null) {
-                    current.esq = new NodeA(unaPersona);
-                } else {
-                    throw new IllegalArgumentException("The node in the left position already exists");
-                }
-            } else if (level.charAt(index) == 'R') {
-                if (current.dret == null) {
-                    current.dret = new NodeA(unaPersona);
-                } else {
-                    throw new IllegalArgumentException("The node in the right position already exists");
-                }
-            }
-        } else {
-            // Avancem a l'arbre fins a la posició on s'ha de crear el nou node
-            if (level.charAt(index) == 'L') {
-                if (current.esq == null) {
-                    current.esq = new NodeA(null); // Crear un node intermedio si no existeix
-                }
-                addNodeRecursive(current.esq, unaPersona, level, index + 1);
-            } else if (level.charAt(index) == 'R') {
-                if (current.dret == null) {
-                    current.dret = new NodeA(null); 
-                }
-                addNodeRecursive(current.dret, unaPersona, level, index + 1);
-            }
+            return true;
         }
+        return arrel.addNodeRecursive(unaPersona, level, 0);
     }
 
     public void displayTree() {
-        // Display the binary tree
-        /*
-         * Aquest mètode mostra l'arbre binari de manera estructurada a la consola,
-         * cridant el mètode recursiu displayTreeRecursive. Comença el recorregut des de
-         * l'arrel de l'arbre.
-         */
+        if (arrel != null) {
+            arrel.displaySubtree(0);
+        } else {
+            System.out.println("(Empty tree)");
+        }
     }
 
     public void preorderSave() {
-        /*
-         * Aquest mètode desa l'arbre binari en format preordre a un fitxer de text. Si
-         * l'arbre és buit, llança una excepció. El nom del fitxer és derivat del nom de
-         * la persona emmagatzemada a l'arrel de l'arbre. Crida al mètode recursiu
-         * preorderSaveRecursive per guardar cada node a una línia, on s’afegeix la
-         * marca “;” per saber si no hi ha node esquerra o dreta. Us recomano veure el
-         * fitxer Nicol.txt.
-         */
+        if (arrel == null || arrel.inf == null) {
+            throw new IllegalStateException("L'arbre esta buit i no es pot guardar.");
+        }
+        String filename = arrel.inf.getName() + ".txt";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            arrel.preorderSaveRecursive(writer);
+            System.out.println("Arbre guardat al fitxer: " + filename);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void removePerson(String name) {
+        if (arrel == null) {
+            System.out.println("El árbol está vacío.");
+        } else if (arrel.inf.getName().equals(name)) {
+            System.out.println("No se puede eliminar la raíz del árbol.");
+        } else {
+            arrel = removePersonRecursive(arrel, name);
+        }
+    }
 
+    private NodeA removePersonRecursive(NodeA node, String name) {
+        if (node == null) {
+            return null;
+        }
+        if (name.compareTo(node.inf.getName()) < 0) {
+            node.esq = removePersonRecursive(node.esq, name);
+        } else if (name.compareTo(node.inf.getName()) > 0) {
+            node.dret = removePersonRecursive(node.dret, name);
+        } else {
+            if (node.esq == null && node.dret == null) {
+                return null;
+            } else if (node.esq == null) {
+                return node.dret;
+            } else if (node.dret == null) {
+                return node.esq;
+            } else {
+                NodeA minNode = node.dret.findMin();
+                node.inf = minNode.inf;
+                node.dret = removePersonRecursive(node.dret, minNode.inf.getName());
+            }
+        }
+        return node;
+    }
+
+    public boolean isFrom(String place) {
+        if (arrel != null && arrel.inf != null) {
+            return arrel.inf.getPlaceOfOrigin().equalsIgnoreCase(place);
+        }
+        return false;
+    }
+
+    public boolean isDescentFrom(String place) {
+        return arrel != null && arrel.isDescentFromRecursive(arrel, place);
+    }
+
+    public int howManyParents() {
+        int count = 0;
+        if (arrel != null) {
+            if (arrel.esq != null)
+                count++;
+            if (arrel.dret != null)
+                count++;
+        }
+        return count;
+    }
+
+    public int howManyGrandParents() {
+        int count = 0;
+        if (arrel != null) {
+            if (arrel.esq != null) {
+                count += arrel.esq.countNodesRecursive();
+            }
+            if (arrel.dret != null) {
+                count += arrel.dret.countNodesRecursive();
+            }
+        }
+        return count;
+    }
+
+    public boolean marriedParents() {
+        if (arrel == null)
+            return false;
+        boolean leftMarried = arrel.esq != null && arrel.esq.inf.getMaritalStatus() == Person.MARRIED;
+        boolean rightMarried = arrel.dret != null && arrel.dret.inf.getMaritalStatus() == Person.MARRIED;
+        return leftMarried && rightMarried;
     }
 }
